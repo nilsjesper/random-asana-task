@@ -4,8 +4,15 @@ from asana.rest import ApiException
 import platform
 from dotenv import load_dotenv
 import os
+import argparse
+
 # Load environment variables from .env file
 load_dotenv()
+
+# Setup argument parser
+parser = argparse.ArgumentParser(description='Pick random Asana tickets.')
+parser.add_argument('--num_tickets', type=int, default=1, help='Number of tickets to pick')
+args = parser.parse_args()
 
 # Setup API client
 configuration = asana.Configuration()
@@ -28,6 +35,9 @@ try:
 
     # Select the first workspace for simplicity (or choose one based on specific logic)
     workspace_id = workspaces_list[0]['gid']
+
+    # Use the number of tickets to pick from the command line argument
+    num_tickets = args.num_tickets
 
     # Step 2: Get the user task list for the selected workspace
     user_task_list_api_instance = asana.UserTaskListsApi(api_client)
@@ -52,21 +62,23 @@ try:
         #convert generator to list
         tasks = list(tasks)
 
-        # Step 4: Pick a random task
-        random_task = random.choice(tasks)
-        task_name = random_task['name']
-        task_id = random_task['gid']
-        task_url = f"https://app.asana.com/0/{user_task_list_id}/{task_id}"
+        for idx in range(num_tickets):
 
-        print(f"Random Task: {task_name}")
-        print(f"Task URL: {task_url}")
+            # Step 4: Pick a random task
+            random_task = random.choice(tasks)
+            task_name = random_task['name']
+            task_id = random_task['gid']
+            task_url = f"https://app.asana.com/0/{user_task_list_id}/{task_id}"
 
-        # find out if you're on a mac, and if you're on a mac, use the `open` command to open the URL
-        if platform.system() == "Darwin":
-            import subprocess
-            subprocess.run(["open", task_url])
-        else:
-            print(f"URL: {task_url}")
+            print(f"\n\nRandom Task {idx+1}: {task_name}")
+            print(f"Task URL: {task_url}")
+
+            # find out if you're on a mac, and if you're on a mac, use the `open` command to open the URL
+            if platform.system() == "Darwin":
+                import subprocess
+                subprocess.run(["open", task_url])
+            else:
+                print(f"URL: {task_url}")
 
     else:
         print("No tasks found in your task list.")
